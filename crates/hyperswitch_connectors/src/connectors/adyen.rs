@@ -2555,13 +2555,12 @@ impl
     fn get_url(
         &self,
         req: &ConnectorWebhookRegisterRouterData,
-        connectors: &Connectors,
+        _connectors: &Connectors,
     ) -> CustomResult<String, errors::ConnectorError> {
-        let endpoint = connectors.adyen.management_base_url.as_str();
         let auth = adyen::AdyenAuthType::try_from(&req.connector_auth_type)
             .change_context(errors::ConnectorError::FailedToObtainAuthType)?;
         let merchant_id = auth.merchant_account.expose();
-        Ok(format!("{endpoint}/v3/merchants/{merchant_id}/webhooks",))
+        Ok(req.request.webhook_url.replace("{merchantId}", &merchant_id))
     }
 
     fn get_request_body(
@@ -3476,5 +3475,25 @@ impl ConnectorSpecifications for Adyen {
         &self,
     ) -> &'static common_types::connector_webhook_configuration::WebhookSetupCapabilities {
         &ADYEN_WEBHOOK_SETUP_CAPABILITIES
+    }
+
+    fn get_webhook_registration_plan(
+        &self,
+        scope: &api_models::merchant_connector_webhook_management::Scope,
+        _payment_methods_enabled: &[PaymentMethodType],
+        connectors: &Connectors,
+    ) -> Vec<(
+        api_models::merchant_connector_webhook_management::ScopeIdentifier,
+        String,
+    )> {
+        use api_models::merchant_connector_webhook_management::{Scope, ScopeIdentifier};
+        let endpoint = connectors.adyen.management_base_url.as_str();
+        match scope {
+            Scope::NotSpecific => vec![(
+                ScopeIdentifier::NotSpecific,
+                format!("{endpoint}/v1/merchants/{{merchantId}}/webhooks"),
+            )],
+            _ => Vec::new(),
+        }
     }
 }

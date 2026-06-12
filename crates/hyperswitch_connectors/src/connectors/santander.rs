@@ -2090,6 +2090,59 @@ impl ConnectorSpecifications for Santander {
         Some(&SANTANDER_SUPPORTED_WEBHOOK_FLOWS)
     }
 
+    fn get_webhook_registration_plan(
+        &self,
+        scope: &api_models::merchant_connector_webhook_management::Scope,
+        _payment_methods_enabled: &[enums::PaymentMethodType],
+        _connectors: &Connectors,
+    ) -> Vec<(
+        api_models::merchant_connector_webhook_management::ScopeIdentifier,
+        String,
+    )> {
+        use api_models::merchant_connector_webhook_management::{Scope, ScopeIdentifier};
+        match scope {
+            Scope::PaymentMethodTypes(requested_pmts) => requested_pmts
+                .iter()
+                .flat_map(|pmt| match pmt {
+                    enums::PaymentMethodType::Pix => vec![(
+                        ScopeIdentifier::PaymentMethodType(*pmt),
+                        "https://apis.santander.com.br/webhooks/pix".to_string(),
+                    )],
+                    enums::PaymentMethodType::Boleto => vec![(
+                        ScopeIdentifier::PaymentMethodType(*pmt),
+                        "https://apis.santander.com.br/webhooks/boleto".to_string(),
+                    )],
+                    enums::PaymentMethodType::PixAutomaticoPush => vec![
+                        (
+                            ScopeIdentifier::PaymentMethodType(*pmt),
+                            "https://apis.santander.com.br/webhooks/pix-push".to_string(),
+                        ),
+                        (
+                            ScopeIdentifier::PaymentMethodType(*pmt),
+                            "https://apis.santander.com.br/webhooks/pix-push-alt".to_string(),
+                        ),
+                    ],
+                    enums::PaymentMethodType::PixAutomaticoQr => vec![
+                        (
+                            ScopeIdentifier::PaymentMethodType(*pmt),
+                            "https://apis.santander.com.br/webhooks/pix-qr-1".to_string(),
+                        ),
+                        (
+                            ScopeIdentifier::PaymentMethodType(*pmt),
+                            "https://apis.santander.com.br/webhooks/pix-qr-2".to_string(),
+                        ),
+                        (
+                            ScopeIdentifier::PaymentMethodType(*pmt),
+                            "https://apis.santander.com.br/webhooks/pix-qr-3".to_string(),
+                        ),
+                    ],
+                    _ => Vec::new(),
+                })
+                .collect(),
+            _ => Vec::new(),
+        }
+    }
+
     #[cfg(feature = "v1")]
     fn generate_connector_request_reference_id(
         &self,

@@ -623,6 +623,23 @@ pub trait ConnectorSpecifications {
     ) -> &'static common_types::connector_webhook_configuration::WebhookSetupCapabilities {
         &consts::DEFAULT_WEBHOOK_SETUP_CAPABILITIES
     }
+
+    /// Returns the webhook registration plan for this connector.
+    ///
+    /// Given the requested scope and the payment methods enabled for this
+    /// merchant connector account, returns a list of `(identifier, webhook_url)`
+    /// tuples. Each tuple corresponds to one connector integration call.
+    fn get_webhook_registration_plan(
+        &self,
+        _scope: &api_models::merchant_connector_webhook_management::Scope,
+        _payment_methods_enabled: &[PaymentMethodType],
+        _connectors: &Connectors,
+    ) -> Vec<(
+        api_models::merchant_connector_webhook_management::ScopeIdentifier,
+        String,
+    )> {
+        Vec::new()
+    }
 }
 
 /// Extended trait for connector common to allow functions with generic type

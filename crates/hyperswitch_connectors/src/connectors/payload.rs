@@ -1245,6 +1245,28 @@ impl ConnectorSpecifications for Payload {
     fn get_supported_webhook_flows(&self) -> Option<&'static [enums::EventClass]> {
         Some(&PAYLOAD_SUPPORTED_WEBHOOK_FLOWS)
     }
+
+    fn get_webhook_registration_plan(
+        &self,
+        scope: &api_models::merchant_connector_webhook_management::Scope,
+        _payment_methods_enabled: &[enums::PaymentMethodType],
+        _connectors: &Connectors,
+    ) -> Vec<(
+        api_models::merchant_connector_webhook_management::ScopeIdentifier,
+        String,
+    )> {
+        use api_models::merchant_connector_webhook_management::{Scope, ScopeIdentifier};
+        match scope {
+            Scope::EventTypes(requested_events) => requested_events
+                .iter()
+                .map(|evt| {
+                    let url = format!("https://api.payload.com/v1/webhooks/{evt}");
+                    (ScopeIdentifier::EventType(*evt), url)
+                })
+                .collect(),
+            _ => Vec::new(),
+        }
+    }
     fn should_call_connector_customer(
         &self,
         #[cfg(feature = "v1")]

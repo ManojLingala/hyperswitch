@@ -7171,8 +7171,15 @@ impl TryFrom<&common_enums::ConnectorWebhookEventType> for WebhookRegisterType {
 impl TryFrom<&ConnectorWebhookRegisterRouterData> for WebhookRegister {
     type Error = error_stack::Report<errors::ConnectorError>;
     fn try_from(item: &ConnectorWebhookRegisterRouterData) -> Result<Self, Self::Error> {
-        let webhook_type = item.request.event_type;
-        let webhook_type: WebhookRegisterType = WebhookRegisterType::try_from(&webhook_type)?;
+        let webhook_type = match &item.request.scope {
+            api_models::merchant_connector_webhook_management::ScopeIdentifier::EventType(event) => {
+                let webhook_event = common_enums::ConnectorWebhookEventType::SpecificEvent(*event);
+                WebhookRegisterType::try_from(&webhook_event)?
+            }
+            api_models::merchant_connector_webhook_management::ScopeIdentifier::NotSpecific => WebhookRegisterType::Standard,
+            // throw err if of this type
+            api_models::merchant_connector_webhook_management::ScopeIdentifier::PaymentMethodType(_) => WebhookRegisterType::Standard,
+        };
         Ok(Self {
             webhook_type,
             url: item.request.webhook_url.clone(),
@@ -7214,6 +7221,7 @@ impl
     ) -> Result<Self, Self::Error> {
         Ok(ConnectorWebhookRegisterRouterData {
             response: Ok(ConnectorWebhookRegisterResponse {
+                identifier: item.data.request.scope.clone(),
                 connector_webhook_id: Some(item.response.id.clone()),
                 status: common_enums::WebhookRegistrationStatus::Success,
                 error_code: None,
