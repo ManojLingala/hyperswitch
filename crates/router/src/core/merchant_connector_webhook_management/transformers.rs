@@ -1,11 +1,12 @@
 use std::marker::PhantomData;
 
 use api_models::merchant_connector_webhook_management::{
-    ConnectorWebhookRegisterRequest, RegisterConnectorWebhookResponse, Scope,
-    ScopeIdentifier, ScopeType, WebhookRegistrationResult,
+    ConnectorWebhookRegisterRequest, RegisterConnectorWebhookResponse, Scope, ScopeIdentifier,
+    ScopeType, WebhookRegistrationResult,
 };
 use common_utils::ext_traits::ValueExt;
 use error_stack::ResultExt;
+use hyperswitch_domain_models::connector_endpoints::Connectors;
 use hyperswitch_interfaces::api::ConnectorSpecifications;
 use router_env::tracing::{self, instrument};
 
@@ -14,14 +15,16 @@ use crate::{
     core::errors::RouterResult,
     errors, types,
     types::{
-        api::ConnectorData, domain,
+        api::ConnectorData,
+        domain,
         // Alias to distinguish domain-level request (scope + webhook_url) from API-level request (scope only).
         ConnectorWebhookRegisterRequest as ConnectorWebhookRegisterData,
-        ConnectorWebhookRegisterResponse, ConnectorWebhookRegisterRouterData, ErrorResponse,
+        ConnectorWebhookRegisterResponse,
+        ConnectorWebhookRegisterRouterData,
+        ErrorResponse,
     },
     SessionState,
 };
-use hyperswitch_domain_models::connector_endpoints::Connectors;
 
 #[cfg(feature = "v2")]
 pub async fn construct_webhook_register_router_data(
@@ -211,8 +214,6 @@ pub async fn validate_webhook_registration_request(
 pub fn get_enabled_payment_method_types(
     merchant_connector_account: &domain::MerchantConnectorAccount,
 ) -> Vec<common_enums::PaymentMethodType> {
-
-
     merchant_connector_account
         .payment_methods_enabled
         .clone()
@@ -221,7 +222,10 @@ pub fn get_enabled_payment_method_types(
         .filter_map(|pm| {
             pm.parse_value::<api_models::admin::PaymentMethodsEnabled>("payment_methods_enabled")
                 .inspect_err(|err| {
-                    router_env::logger::error!("Unable to deserialize payment methods enabled: {:?}", err);
+                    router_env::logger::error!(
+                        "Unable to deserialize payment methods enabled: {:?}",
+                        err
+                    );
                 })
                 .ok()
         })

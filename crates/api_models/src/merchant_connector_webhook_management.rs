@@ -65,7 +65,7 @@ pub struct WebhookRegistrationError {
 pub struct ConnectorWebhookRegisterRequest {
     #[schema(value_type = Option<Scope>)]
     pub scope: Scope,
-        #[schema(value_type = Option<ConnectorWebhookEventType>)]
+    #[schema(value_type = Option<ConnectorWebhookEventType>)]
     pub event_type: common_enums::ConnectorWebhookEventType,
 }
 

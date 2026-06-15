@@ -1,4 +1,6 @@
 mod transformers;
+// Renamed to avoid ambiguity with the domain-models type (which now contains `scope` + `webhook_url`).
+use api_models::merchant_connector_webhook_management::ConnectorWebhookRegisterRequest as ApiConnectorWebhookRegisterRequest;
 use common_utils::id_type;
 use error_stack::ResultExt;
 use hyperswitch_domain_models::{
@@ -6,8 +8,6 @@ use hyperswitch_domain_models::{
     router_request_types::merchant_connector_webhook_management::ConnectorWebhookRegisterRequest,
     router_response_types::merchant_connector_webhook_management::ConnectorWebhookRegisterResponse,
 };
-// Renamed to avoid ambiguity with the domain-models type (which now contains `scope` + `webhook_url`).
-use api_models::merchant_connector_webhook_management::ConnectorWebhookRegisterRequest as ApiConnectorWebhookRegisterRequest;
 // NEW: Import `ConnectorSpecifications` so we can call `get_webhook_registration_plan(...)`.
 use hyperswitch_interfaces::api::ConnectorSpecifications;
 use transformers as configure_connector_webhook_flow;
@@ -99,9 +99,11 @@ pub async fn register_connector_webhook(
     // Returns a list of (scope_identifier, webhook_url) tuples.
     // Example for Santander + Pix/Boleto:
     //   [(PaymentMethodType(Pix), url1), (PaymentMethodType(Boleto), url2), ...]
-    let registration_plan = connector_data
-        .connector
-        .get_webhook_registration_plan(&req.scope, &enabled_payment_methods, &state.conf.connectors);
+    let registration_plan = connector_data.connector.get_webhook_registration_plan(
+        &req.scope,
+        &enabled_payment_methods,
+        &state.conf.connectors,
+    );
 
     // Derive metadata for the final aggregated response.
     let scope_type = configure_connector_webhook_flow::determine_scope_type(&req.scope);
@@ -211,9 +213,7 @@ pub async fn register_connector_webhook(
     // Step 6: Build the final aggregated response.
     let response =
         configure_connector_webhook_flow::construct_connector_webhook_registration_response(
-            results,
-            scope_type,
-            requested,
+            results, scope_type, requested,
         )?;
 
     Ok(service_api::ApplicationResponse::Json(response))

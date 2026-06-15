@@ -2560,7 +2560,10 @@ impl
         let auth = adyen::AdyenAuthType::try_from(&req.connector_auth_type)
             .change_context(errors::ConnectorError::FailedToObtainAuthType)?;
         let merchant_id = auth.merchant_account.expose();
-        Ok(req.request.webhook_url.replace("{merchantId}", &merchant_id))
+        Ok(req
+            .request
+            .webhook_url
+            .replace("{merchantId}", &merchant_id))
     }
 
     fn get_request_body(
